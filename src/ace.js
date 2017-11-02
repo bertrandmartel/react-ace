@@ -6,6 +6,17 @@ import isEqual from 'lodash.isequal'
 const { Range } = ace.acequire('ace/range');
 import { editorOptions, editorEvents } from './editorOptions.js'
 
+function debounce(fn, delay) {
+  var timer = null;
+  return function () {
+    var context = this, args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      fn.apply(context, args);
+    }, delay);
+  };
+}
+
 export default class ReactAce extends Component {
   constructor(props) {
     super(props);
@@ -47,7 +58,9 @@ export default class ReactAce extends Component {
     for (let i = 0; i < editorProps.length; i++) {
       this.editor[editorProps[i]] = this.props.editorProps[editorProps[i]];
     }
-
+    if (this.props.debounceChangePeriod) {
+      this.onChange = debounce(this.onChange, this.props.debounceChangePeriod);
+    }
     this.editor.renderer.setScrollMargin(scrollMargin[0], scrollMargin[1], scrollMargin[2], scrollMargin[3])
     this.editor.getSession().setMode(`ace/mode/${mode}`);
     this.editor.setTheme(`ace/theme/${theme}`);
@@ -341,6 +354,7 @@ ReactAce.propTypes = {
   tabSize: PropTypes.number,
   showPrintMargin: PropTypes.bool,
   cursorStart: PropTypes.number,
+  debounceChangePeriod: PropTypes.number,
   editorProps: PropTypes.object,
   setOptions: PropTypes.object,
   style: PropTypes.object,
